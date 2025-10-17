@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  #Serviço da aplicação Java
+  app:
+    build: .
+    container_name: java_app
+    ports:
+      - "8080:8080" # expõe a aplicação para o host
+    environment:
+      # Variáveis de ambiente que a aplicação pode usar
+      - APP_PROFILE=test
+    depends_on:
+      - h2  # garante que o H2 inicie antes da app
+    networks:
+      - app-network
+
+    #Serviço para banco de dados H2 (modo servidor)
+  h2:
+    image: oscarfonts/h2:latest
+    container_name: h2_db
+    restart: always
+    ports:
+      - "8082:8082"  # porta padrão do console Web do H2
+    environment:
+      H2_OPTIONS: "-ifNotExists" #Cria DB se não existir
+      H2_TCP_ALLOW_OTHERS: "true" #Permite conexões externas
+    networks:
+      - app-network
+    volumes:
+      - h2_data:/opt/h2-data  # persistência opcional
+
+  # Rede interna compartilhada
+networks:
+  app-network:
+    driver: bridge
+
+  # Volumes persistentes
+volumes:
+  h2_data:
